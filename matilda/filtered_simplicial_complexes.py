@@ -71,11 +71,59 @@ class FilteredSimplicialComplex(object):
         return "".join(['simplex: '+str(self.simplices[s_index])+' filtration_value: '+str(self.appears_at[s_index])+"\n" \
                     for s_index in self.simplices_indices])
 
+    def __repr__(self):
+        return f"Filtered simplicial complex of dimension {self.dimension}, with {len(self.simplices)} simplices. Use print_simplices() for more information."
+    
+    @staticmethod
+    def from_simplices(simplices_list):
+        """
+        Constructs Filtered Simplicial Complex from a list of lists or tuples of integers corresponding 
+        to simplices and adding all necessary faces to make it valid. All times are set to 0.
+        """
+        def generate_faces(x):
+            if len(x) == 1:
+                return []
+            return [ tuple(x[:i] + x[i+1:]) for i in range(len(x))]
 
+        def closure(x): 
+            """
+            Computes all faces (non-empty subsets of all possible cardinalities) of x and resturns them as a set.
+            """
+            result = set()
+            faces = generate_faces(x)
+            result = result.union(faces)
+            for y in faces:
+                sub_result = closure(y)
+                result = result.union(sub_result)
+            return result
+        
+        result = set()
+        for x in simplices_list:
+            result = result.union(closure(x))
+        
+        result = list(result) + simplices_list
+        result = sorted(result,key=lambda x: len(x))
+        fsc = FilteredSimplicialComplex(dimension=max([len(x)-1 for x in simplices_list]),
+                                        simplices=[numpy.array(x) for x in result],
+                                        simplices_indices=range(len(result)),
+                                        appears_at=[0. for x in result])
+        return fsc
+
+
+    def check_for_duplicates(self):
+        """
+        Simple check for duplicates in simplices data. Useful when constructing a filtered simplicial complex by hand.
+        """
+        simplices_hashable = [tuple(x) for x in self.simplices]
+        if (len(simplices_hashable)!=len(set(simplices_hashable))):
+            raise ValueError("Invalid filtration: duplicate simplices detected.")
+        else:
+            print("No duplicates found.")
+        return
 
     def has_valid_filtration(self):
         """
-        Checks if any simplices appear before their faces. Note that this method is very time consuming.
+        Multiple checks for validity of filtered simplicial complex structure. Note that this method is very time consuming.
         Checks for sanity of simplices 1. filtration value(appears_at) of faces 2. simplices_indices
 
         Returns
@@ -83,6 +131,7 @@ class FilteredSimplicialComplex(object):
         self : object
             Returns self.
         """
+        self.check_for_duplicates()
         current_appears_at = -1
         for order_index,order_item in enumerate(self.simplices_indices):
             simplex_item = self.simplices[order_item]
