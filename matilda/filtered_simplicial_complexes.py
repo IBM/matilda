@@ -87,7 +87,7 @@ class FilteredSimplicialComplex(object):
 
         def closure(x): 
             """
-            Computes all faces (non-empty subsets of all possible cardinalities) of x and resturns them as a set.
+            Computes all faces (non-empty subsets of all possible cardinalities) of x and returns them as a set.
             """
             result = set()
             faces = generate_faces(x)
@@ -110,6 +110,68 @@ class FilteredSimplicialComplex(object):
         return fsc
 
 
+
+    @staticmethod
+    def from_simplices_and_times(simplices_list):
+        """
+        Constructs Filtered Simplicial Complex from a list of pairs of lists or tuples of integers and a float corresponding 
+        to simplices and their time of appearance and adding all necessary faces to make it valid. All times for simplices 
+        that were not specified are set to their cofaces' time.
+        """
+
+        fsc_result = []
+
+
+        def generate_all_faces(xt):
+            x,t = xt
+            result = []
+            if len(x) > 1:
+                faces = [ (tuple(x[:i] + x[i+1:]),t) for i in range(len(x))]
+                result.extend(faces)
+                for yt in faces:
+                    result.extend(generate_all_faces(yt))
+            return result
+            
+
+        def correct_ordering(simplices_list):
+            """
+            Checks whether simplices_list is a list of pairs (x,t) where for all (y,s) with x<y, then t<=s. Currently highly inneficient.
+            """
+
+            def is_coface(x, potential_coface): # Implicitly assumes correct ordering of vertices in simplices
+                return set(x).issubset(potential_coface)
+            
+            for xt in simplices_list:
+                for yt in [x for x in simplices_list if len(x[0])>len(xt[0])]:
+                    if is_coface(xt[0],yt[0])  and  xt[1]>yt[1]:
+                        raise ValueError(f"Error: Inconsistent times found: {xt} appears after its coface {yt}.")
+                    else:
+                        pass
+            return
+
+
+        correct_ordering(simplices_list)
+        for xt in simplices_list:
+            new_faces = generate_all_faces(xt)
+            fsc_result.extend(new_faces)
+
+        fsc_result = sorted(fsc_result,key=lambda x: (len(x[0]),x[1]) )
+        result = [ (tuple(x[0]),x[1]) for x in simplices_list]
+        simplices_no_time = [ x[0] for x in result]
+        for xt in fsc_result:
+            if xt[0] not in simplices_no_time:
+                simplices_no_time.append(xt[0])
+                result.append(xt)
+                
+        result = sorted(result,key=lambda x: (len(x[0]),x[1]) )
+
+
+        fsc = FilteredSimplicialComplex(dimension=max([len(x[0])-1 for x in simplices_list]),
+                                        simplices=[numpy.array(x[0]) for x in result],
+                                        simplices_indices=range(len(result)),
+                                        appears_at=[x[1] for x in result])
+        return fsc
+
     def check_for_duplicates(self):
         """
         Simple check for duplicates in simplices data. Useful when constructing a filtered simplicial complex by hand.
@@ -123,7 +185,7 @@ class FilteredSimplicialComplex(object):
 
     def has_valid_filtration(self):
         """
-        Multiple checks for validity of filtered simplicial complex structure. Note that this method is very time consuming.
+        Checks if any simplices appear before their faces. Note that this method is very time consuming.
         Checks for sanity of simplices 1. filtration value(appears_at) of faces 2. simplices_indices
 
         Returns
@@ -131,7 +193,6 @@ class FilteredSimplicialComplex(object):
         self : object
             Returns self.
         """
-        self.check_for_duplicates()
         current_appears_at = -1
         for order_index,order_item in enumerate(self.simplices_indices):
             simplex_item = self.simplices[order_item]
