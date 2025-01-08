@@ -116,7 +116,27 @@ class FilteredSimplicialComplex(object):
         """
         Constructs Filtered Simplicial Complex from a list of pairs of lists or tuples of integers and a float corresponding 
         to simplices and their time of appearance and adding all necessary faces to make it valid. All times for simplices 
-        that were not specified are set to their cofaces' time.
+        that were not specified are set to their cofaces' time. 
+        Example:
+        ::
+
+            fsc = matilda.FilteredSimplicialComplex.from_simplices_and_times([([0],0),([1],0),([2],0),
+                                                                              ([0,1],2),([1,2,3],3)])
+            fsc.print_simplices()
+
+        Gives the output
+        ::
+
+            simplex: [0]  filtration_value:  0
+            simplex: [1]  filtration_value:  0
+            simplex: [2]  filtration_value:  0
+            simplex: [3]  filtration_value:  3
+            simplex: [0 1]  filtration_value:  2
+            simplex: [2 3]  filtration_value:  3
+            simplex: [1 3]  filtration_value:  3
+            simplex: [1 2]  filtration_value:  3
+            simplex: [1 2 3]  filtration_value:  3
+
         """
 
         fsc_result = []
