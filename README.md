@@ -76,7 +76,7 @@ Install with the optional API dependencies and start the server:
     pip install "./matilda-master.zip[api]"
     python -m matilda.api --host 127.0.0.1 --port 8000
 
-Interactive documentation is then available at `http://127.0.0.1:8000/docs`. The server has no authentication, so it binds to `127.0.0.1` by default; do not expose it on a public network.
+Interactive documentation is then available at `http://127.0.0.1:8000/docs`. The notebook `examples/example_api.ipynb` walks through the API, computing barcodes and harmonic representatives over HTTP. The server has no authentication, so it binds to `127.0.0.1` by default; do not expose it on a public network.
 
 ### Submitting a job
 
