@@ -30,18 +30,24 @@ install_requires = [
     "scipy"
 ]
 
+extras_require = {
+    "api": ["fastapi>=0.100", "pydantic>=2", "uvicorn"],
+    "test": ["pytest", "httpx"],
+}
+
 setup(
     name="matilda",
     version=__version__,
     author="",
     author_email="",
     url="",
-    packages=["matilda"],
+    packages=["matilda", "matilda.api"],
     description="installer test",
     long_description="",
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext},
     install_requires=install_requires,
+    extras_require=extras_require,
     include_package_data=True,
     zip_safe=False,
 )
